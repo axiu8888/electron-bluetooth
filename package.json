@@ -1,0 +1,33 @@
+{
+  "name": "electron-bluetooth",
+  "version": "1.0.0",
+  "description": "electron中使用BLE，连接蓝牙设备，发送和接收数据",
+  "main": "main.js",
+  "scripts": {
+    "install": "electron-rebuild",
+    "start": "chcp 65001 && electron .",
+    "electron-bluetooth_x86": "electron-packager . serialport-example --win32 --arch=ia32 --out ./install/ --overwrite --app-version=2.0.0 --electron-version=13.1.4 --icon=./logo.ico --asar",
+    "electron-bluetooth_x64": "electron-packager . serialport-example --win32 --arch=x64 --out ./install/ --overwrite --app-version=2.0.0 --electron-version=13.1.4 --icon=./logo.ico --asar",
+    "electron-bluetooth": "npm run electron-bluetooth_x86 && npm run electron-bluetooth_x64",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/axiuya/electron-bluetooth.git"
+  },
+  "keywords": [
+    "Electron",
+    "BLE",
+    "Bluetooth"
+  ],
+  "author": "阿修",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/axiuya/electron-bluetooth/issues"
+  },
+  "homepage": "https://github.com/axiuya/electron-bluetooth#readme",
+  "devDependencies": {
+    "electron": "^13.1.4",
+    "electron-packager": "^15.2.0"
+  }
+}
