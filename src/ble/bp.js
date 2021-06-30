@@ -11,6 +11,7 @@ const writeCharacteristicUUID = '0000fff2-0000-1000-8000-00805f9b34fb';
 const readDescriptorUUID = '00002902-0000-1000-8000-00805f9b34fb';
 
 var client;
+var lastBpTime = null; // 最近一次血压数据的时间
 
 // 开始测量
 function getCmd(flag) {
@@ -32,12 +33,11 @@ function getCmd(flag) {
   return cmd;
 }
 
-var gattServer = null;
-var lastBpTime = null; // 最近一次血压数据的时间
+
 
 // acceptAllDevices: true,
 addClickListener('connect', () => {
-  if (gattServer && gattServer.connected) {
+  if (client && client.isConnected()) {
     console.log('已经连接上设备');
     return;
   }
@@ -86,13 +86,9 @@ addClickListener('startMeasure', () => {
  * 发送开始测量的指令
  */
 function sendStartCmd(client) {
-  client.getServiceCharacteristic(serviceUUID, writeCharacteristicUUID)
-    .then(characteristics => {
-      let cmd = getCmd(0x05);
-      characteristics.writeValue(cmd);
-      console.log('cmd ==>: ' + binaryHelper.bytesToHex(cmd));
-    })
-    .catch(err => console.error(err));
+  let cmd = getCmd(0x05);
+  console.log('cmd ==>: ' + binaryHelper.bytesToHex(cmd));
+  client.write(serviceUUID, writeCharacteristicUUID, cmd);
 }
 
 
