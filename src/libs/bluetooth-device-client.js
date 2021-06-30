@@ -25,15 +25,13 @@ function startScan(options, callback) {
 /**
  * 蓝牙设备连接客户端
  */
-function BluetoothDeviceClient(device, autoConnected) {
+function BluetoothDeviceClient(device) {
     BinaryHelper.call(this);
     if (!(device instanceof BluetoothDevice)) {
         throw new Error("蓝牙设备类型错误");
     }
     // 蓝牙设备
     this.device = device;
-    // 是否自动连接
-    this.autoConnected = autoConnected;
 }
 /**
  * 连接的设备
@@ -43,10 +41,6 @@ BluetoothDeviceClient.prototype.device = null;
  * 连接服务
  */
 BluetoothDeviceClient.prototype.gattServer = null;
-/**
- * 是否断开后自动重连设备
- */
-BluetoothDeviceClient.prototype.autoConnect = false;
 /**
  * 自动重连的间隔
  */
