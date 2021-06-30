@@ -1,11 +1,16 @@
+function addClickListener(id, listener) {
+  document.getElementById(id).addEventListener('click', listener);
+}
+
+
+const binaryHelper = new BinaryHelper();
+
 const serviceUUID = '0000fff0-0000-1000-8000-00805f9b34fb';
 const readCharacteristicUUID = '0000fff1-0000-1000-8000-00805f9b34fb';
 const writeCharacteristicUUID = '0000fff2-0000-1000-8000-00805f9b34fb';
 const readDescriptorUUID = '00002902-0000-1000-8000-00805f9b34fb';
 
-// require('../libs/SerialPortDevice')
-
-const binaryHelper = new BinaryHelper();
+var client;
 
 // 开始测量
 function getCmd(flag) {
@@ -31,130 +36,108 @@ var gattServer = null;
 var lastBpTime = null; // 最近一次血压数据的时间
 
 // acceptAllDevices: true,
-document.getElementById('connect')
-  .addEventListener('click', () => {
-    if(gattServer && gattServer.connected) {
-      console.log('已经连接上设备');
-      return;
-    }
+addClickListener('connect', () => {
+  if (gattServer && gattServer.connected) {
+    console.log('已经连接上设备');
+    return;
+  }
 
-    console.log('开始扫描...');
-    //optionalServices
-    navigator.bluetooth.requestDevice({
-        filters: [{
-          namePrefix: 'HSRG'
-        }, {
-          namePrefix: 'Bluetooth BP'
-        }],
-        optionalServices: [serviceUUID]
-      })
-      .then(device => onDeviceScan(device))
-      .catch(err => console.error(err));
-  });
-
-document.getElementById('disconnect')
-  .addEventListener('click', () => {
-    if (gattServer) {
-      // 断开连接
-      gattServer.disconnect();
-      gattServer = null;
-      console.log('断开连接...');
+  console.log('开始扫描...');
+  // 扫描设备
+  startScan({
+    filters: [{
+      namePrefix: 'Bluetooth BP'
+    }],
+    optionalServices: [serviceUUID]
+  }, (device, err) => {
+    if (err) {
+      console.error(err);
     } else {
-      console.log('未连接设备...');
+      console.log(device);
+      client = newBpClient(device);
+      // 连接设备
+      setTimeout(() => client.connect(), 1000);
     }
   });
+});
+
+addClickListener('disconnect', () => {
+  if (client && client.isConnected()) {
+    // 断开连接
+    client.disconnect();
+  } else {
+    console.log('未连接设备...');
+  }
+});
+
 
 // acceptAllDevices: true,
-document.getElementById('startMeasure')
-  .addEventListener('click', () => {
-    // 开始测量
-    if (gattServer && gattServer.connected) {
-      sendStartCmd(gattServer);
-    } else {
-      console.log('设备未连接');
-    }
-  });
+addClickListener('startMeasure', () => {
+  // 开始测量
+  if (client && client.isConnected()) {
+    sendStartCmd(client);
+  } else {
+    console.log('设备未连接');
+  }
+});
+
 
 /**
- * 扫描到设备
- * 
- * @param {BluetoothDevice} device 
+ * 发送开始测量的指令
  */
-function onDeviceScan(device) {
-  // 连接
-  device.gatt.connect()
-    .then((server) => {
-      if (!server.connected) {
-        console.log('连接失败!');
-        onConnectFailure(server.device, server, new Error("连接失败"));
-        server.disconnect();
-        return;
-      }
-
-      // 获取服务
-      getService(server, serviceUUID)
-        // 连接成功
-        .then(service => {
-          gattServer = server;
-          onConnectSuccess(server.device, server, service);
-        })
-        .catch(err => {
-          gattServer = null;
-          onConnectFailure(server.device, server, err);
-        });
+function sendStartCmd(client) {
+  client.getServiceCharacteristic(serviceUUID, writeCharacteristicUUID)
+    .then(characteristics => {
+      let cmd = getCmd(0x05);
+      characteristics.writeValue(cmd);
+      console.log('cmd ==>: ' + binaryHelper.bytesToHex(cmd));
     })
-    .catch(err => onConnectFailure(server.device, server, err));
-}
-
-/**
- * 连接到设备成功
- * 
- * @param {BluetoothDevice} device 设备
- * @param {BluetoothRemoteGATTServer} server 连接服务
- * @param {BluetoothRemoteGATTService } service UUID的服务
- */
-function onConnectSuccess(device, server, service) {
-  console.log('连接到设备: ' + device.id + ', ' + device.name);
-  console.log(device);
-  console.log(server);
-  console.log(service);
-
-  getReadCharacteristic(server)
-    .then(characteristics => addCharacteristicListener(characteristics, onCharacteristicReadChanged))
     .catch(err => console.error(err));
-
-  setTimeout(() => {
-    console.log('开始测量...');
-
-    // 发送开始测量的指令
-    sendStartCmd(gattServer);
-
-  }, 1000);
-
 }
 
+
 /**
- * 连接到设备失败
+ * 创建血压计设备客户端
  * 
  * @param {BluetoothDevice} device 设备
- * @param {BluetoothRemoteGATTServer} server 服务，可能为空
- * @param {Error} err 错误 
+ * @returns 返回创建的客户端
  */
-function onConnectFailure(device, server, err) {
-  console.log('连接到设备失败: ' + device.id + ', ' + device.name);
-  console.log(device);
-  console.log(server);
-  console.error(err);
+function newBpClient(device) {
+  let c = new BluetoothDeviceClient(device);
+  // 设备连接成功
+  c.onConnectSuccess = function (device, server) {
+    console.log('连接设备成功: ' + device.id + ', ' + device.name);
+    console.log(device);
+    console.log(server);
+
+    // 设置监听
+    this.getServiceCharacteristic(serviceUUID, readCharacteristicUUID)
+      .then(characteristic => this.addCharacteristicChanged(characteristic, onCharacteristicChanged))
+      .catch(err => {
+        console.error(err);
+        // 连接失败了，重新连接吧
+        this.disconnect();
+        setTimeout(() => this.connect(), 1000);
+      });
+  }
+
+  // 设备连接失败了
+  c.onConnectFailure = function (device, err) {
+    console.log('连接设备失败: ' + device.id + ', ' + device.name);
+    console.log(device);
+    console.error(err);
+  }
+
+  // 设备连接被断开
+  c.onDisconnect = function (device) {
+    console.log('设备连接断开: ' + device.id + ', ' + device.name);
+    console.log(device);
+  }
+
+  return c;
 }
 
-/**
- * 可读取
- * 
- * @param {*} event 事件
- * @param {*} error 错误
- */
-function onCharacteristicReadChanged(event, error) {
-  // console.log('onCharacteristicReadChanged...')
+function onCharacteristicChanged(event, error) {
   if (error) {
     console.log('读取出现错误...');
     console.error(error);
@@ -164,6 +147,7 @@ function onCharacteristicReadChanged(event, error) {
   // console.log(value);
   let data = new Uint8Array(value.buffer, 0, value.buffer.byteLength);
   console.log('data: ' + binaryHelper.bytesToHex(data) + ', length: ' + data.length);
+
 
   // 解析数据
   let type = data[2];
@@ -176,7 +160,7 @@ function onCharacteristicReadChanged(event, error) {
     // 测量错误
     console.log('测量错误');
   } else if (0xFE == type) {
-    if(lastBpTime && (Date.now() - lastBpTime <= 30000)) {
+    if (lastBpTime && (Date.now() - lastBpTime <= 30000)) {
       // 测量的数据应该至少间隔30秒，否则视为同一条数据
       return;
     }
@@ -188,74 +172,4 @@ function onCharacteristicReadChanged(event, error) {
     let hr = data[6] & 0xFF;
     console.log('收缩压: ' + systolic + ', 舒张压: ' + diastolic + ', hr: ' + hr);
   }
-
-}
-
-/**
- * 发送开始测量的指令
- */
-function sendStartCmd(server) {
-  getWriteCharacteristic(server)
-    .then(characteristics => {
-      let cmd = getCmd(0x05);
-      characteristics.writeValue(cmd);
-      console.log('cmd ==>: ' + binaryHelper.bytesToHex(cmd));
-    })
-    .catch(err => console.error(err));
-}
-
-/**
- * 获取服务
- * 
- * @param {BluetoothRemoteGATTServer} gattServer 
- * @param {string} serviceUUID 
- * @returns 返回BluetoothRemoteGATTService对象 
- */
-function getService(gattServer, serviceUUID) {
-  return gattServer.getPrimaryService(serviceUUID);
-}
-
-/**
- * 查找服务的读取特征
- * 
- * @param {BluetoothRemoteGATTServer} gattServer GATT服务 
- * @returns 返回读取的BluetoothRemoteGATTCharacteristic对象
- */
-function getReadCharacteristic(gattServer) {
-  return getServiceCharacteristic(gattServer, serviceUUID, readCharacteristicUUID);
-}
-
-/**
- * 查找服务的写入特征
- * 
- * @param {BluetoothRemoteGATTServer} gattServer GATT服务 
- * @returns 返回写入的BluetoothRemoteGATTCharacteristic对象
- */
-function getWriteCharacteristic(gattServer) {
-  return getServiceCharacteristic(gattServer, serviceUUID, writeCharacteristicUUID);
-}
-
-/**
- * 查找服务的特征
- * 
- * @param {BluetoothRemoteGATTServer} gattServer GATT服务 
- * @param {string} serviceUUID 服务UUID
- * @param {string} characteristicUUID 特征UUID 
- * @returns 返回BluetoothRemoteGATTCharacteristic对象
- */
-function getServiceCharacteristic(gattServer, serviceUUID, characteristicUUID) {
-  return gattServer.getPrimaryService(serviceUUID)
-    .then(service => service.getCharacteristics())
-    .then(characteristics => characteristics.find(c => c.uuid == characteristicUUID));
-}
-
-/**
- * 添加数据监听
- * 
- * @param {BluetoothRemoteGATTCharacteristics} characteristics 特征
- * @param {Function} listener 监听
- */
-function addCharacteristicListener(characteristics, listener) {
-  characteristics.addEventListener('characteristicvaluechanged', listener);
-  characteristics.startNotifications();
 }

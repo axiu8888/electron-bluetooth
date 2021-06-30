@@ -1,16 +1,14 @@
-
 /**
  * 二进制工具类
  */
- function BinaryHelper() {
-}
+function BinaryHelper() {}
 
 /**
-     * 将字符串转换为字节数组
-     *
-     * @param {String} str 字节数据
-     * @param {Number} maxLength 最大长度
-     */
+ * 将字符串转换为字节数组
+ *
+ * @param {String} str 字节数据
+ * @param {Number} maxLength 最大长度
+ */
 BinaryHelper.prototype.strToBytes = function (str, maxLength) {
     if (maxLength && str.length > maxLength) {
         throw new Error("超过最大长度");
@@ -69,7 +67,7 @@ BinaryHelper.prototype.hexToBytes = function (hex) {
  * @param {boolean} trim 是否清楚空格
  */
 BinaryHelper.prototype.bytesToHex = function (bytes, trim) {
-    if(bytes instanceof ArrayBuffer) {
+    if (bytes instanceof ArrayBuffer) {
         bytes = new Uint8Array(bytes, 0, bytes.byteLength);
     }
     var array = [];
@@ -112,12 +110,12 @@ BinaryHelper.prototype.pushBytes = function (bytes, payload) {
 };
 
 /**
-* 将IP和端口转换为字节数组
-*
-* @param {String} ip IP地址
-* @param {number} port 端口
-* @param {boolean} bigEndian 端口是否为大端存储，默认为小端存储
-*/
+ * 将IP和端口转换为字节数组
+ *
+ * @param {String} ip IP地址
+ * @param {number} port 端口
+ * @param {boolean} bigEndian 端口是否为大端存储，默认为小端存储
+ */
 BinaryHelper.prototype.hostToBytes = function (ip, port, bigEndian) {
     let array = [];
     let splits = (ip + "").split(".");
@@ -136,3 +134,92 @@ BinaryHelper.prototype.hostToBytes = function (ip, port, bigEndian) {
     return array;
 };
 
+/**
+ * 数值转换成字节数组
+ * 
+ * @param num 数值
+ * @param bit  位长度: 8/16/32/64
+ * @param bigEndian 是否为大端
+ */
+BinaryHelper.prototype.numberToBytes = function (num, bit, bigEndian = true) {
+    let size = Math.floor(bit / 8);
+    let bytes = [];
+    for (let i = 0; i < size; i += 1) {
+        // 大端存储：高位在前，低位在后  数值先高字节位移，后低字节
+        // 小端存储：低位在前，高位在后  数值先取低字节，后高字节依次右移
+        bytes.push(((bigEndian ? (num >> ((bit - 8) - i * 8)) : (num >> (i * 8))) & 0xFF));
+    }
+    return bytes;
+}
+
+/**
+ * 字节数组转换成整数
+ *
+ * @param bytes  字节数组
+ * @param order  字节序
+ * @param signed 是否为有符号整数
+ * @param upperCase 是否为大写字母
+ * @return 返回一个整数
+ */
+BinaryHelper.prototype.bytesToNumber = function (bytes, bigEndian = true, signed = false) {
+    // 大端存储：高位在前，低位在后
+    // 小端存储：低位在前，高位在后
+    let value = 0;
+    // 正数的原码，高位为0，反码/补码均与原码相同；
+    // 负数的原码：高位为1, 其他为正数的原码；反码是除符号位，其它按位取反；补码在反码的基础上 + 1
+    if (bigEndian) {
+        if (signed && ((bytes[0] & 0b10000000) >> 7) == 1) {
+            for (let b of bytes) {
+                value <<= 8;
+                value |= ~b & 0xFF;
+            }
+            value = ((-value) - 1);
+        } else {
+            for (let b of bytes) {
+                value <<= 8;
+                value |= b & 0xFF;
+            }
+        }
+    } else {
+        if (signed && ((bytes[bytes.length - 1] & 0b10000000) >> 7) == 1) {
+            for (let i = bytes.length - 1; i >= 0; i--) {
+                value <<= 8;
+                value |= ~bytes[i] & 0xFF;
+            }
+            value = ((-value) - 1);
+        } else {
+            for (let i = bytes.length - 1; i >= 0; i--) {
+                value <<= 8;
+                value |= bytes[i] & 0xFF;
+            }
+        }
+    }
+    return value;
+}
+
+/**
+ * 整数转换成16进制字符串
+ *
+ * @param bytes  字节
+ * @param bitSize  字节大小: 8/16/32/64
+ * @param bigEndian 是否为大端存储
+ * @param upperCase 是否为大写字母
+ * @return 返回一个16进制字符串
+ */
+BinaryHelper.prototype.numberToHex = function (value, bitSize, bigEndian = true, upperCase = true) {
+    let bytes = this.numberToBytes(value, bitSize, bigEndian);
+    return this.bytesToHex(bytes, false, upperCase);
+}
+
+/**
+ * 16进制字符串转换成整数
+ *
+ * @param hex  16进制字符串
+ * @param order  字节序
+ * @param signed 是否为有符号整数
+ * @return 返回一个整数
+ */
+BinaryHelper.prototype.hexToNumber = function (hex, bigEndian = true, signed = false) {
+    let bytes = this.hexToBytes(hex);
+    return this.bytesToNumber(bytes, bigEndian, signed);
+}
