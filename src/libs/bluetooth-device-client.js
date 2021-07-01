@@ -1,4 +1,3 @@
-
 /**
  * 开始扫描设备
  * 
@@ -200,7 +199,7 @@ class BluetoothDeviceClient extends BinaryHelper {
                 }
                 if (!server.connected) {
                     server.disconnect();
-                    this.onConnectFailure(server.device, server, new Error("连接失败"));
+                    this.onConnectFailure(this.device, server, new Error("连接失败"));
                     return;
                 }
                 this.gattServer = server;
