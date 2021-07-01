@@ -21,7 +21,8 @@ addClickListener('connect', () => {
         filters: [{
             namePrefix: 'HSRG'
         }],
-        optionalServices: [serviceUUID]
+        optionalServices: [serviceUUID],
+        // acceptAllDevices: true
     }, (device, err) => {
         if (err) {
             console.error(err);
@@ -31,13 +32,11 @@ addClickListener('connect', () => {
             if (device.name == 'HSRG_11000184') {
                 client = newCollectorClient(device);
                 // 连接设备
-                setTimeout(() => {
-                    let result = client.connect();
-                    console.log('result: ' + result);
-                    // client.onConnectSuccess = func;
-                }, 1000);
+                setTimeout(() => client.connect(), 1000);
+                return false;
             }
         }
+        return true;
     });
 });
 
@@ -53,8 +52,8 @@ addClickListener('disconnect', () => {
 
 addClickListener('startMeasure', () => {
     if (client && client.isConnected()) {
-        // 添加监听
-
+        // 发送指令
+        // send()
     } else {
         console.log('设备未连接');
     }
@@ -104,12 +103,12 @@ function newCollectorClient(device) {
 
 function onCharacteristicChanged(event, error) {
     if (error) {
-      console.log('读取出现错误...');
-      console.error(error);
-      return;
+        console.log('读取出现错误...');
+        console.error(error);
+        return;
     }
     let value = event.target.value;
     // console.log(value);
     let data = new Uint8Array(value.buffer, 0, value.buffer.byteLength);
     console.log('data: ' + binaryHelper.bytesToHex(data) + ', length: ' + data.length);
-  }
+}
