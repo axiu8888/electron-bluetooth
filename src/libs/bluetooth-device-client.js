@@ -120,7 +120,7 @@ class BluetoothDeviceClient extends BinaryHelper {
             });
         } else {
             return new Promise(function (resolve, reject) {
-                reject('无法识别的characteristics: ' + characteristics + ', 必须是BluetoothRemoteGATTCharacteristics对象');
+                reject('无法识别的characteristics: ' + characteristics + ', 必须是BluetoothRemoteGATTCharacteristic对象');
             });
         }
     }
@@ -340,7 +340,7 @@ class BluetoothDeviceClient extends BinaryHelper {
 //         });
 //     } else {
 //         return new Promise(function (resolve, reject) {
-//             reject('无法识别的characteristics: ' + characteristics + ', 必须是BluetoothRemoteGATTCharacteristics对象');
+//             reject('无法识别的characteristics: ' + characteristics + ', 必须是BluetoothRemoteGATTCharacteristic对象');
 //         });
 //     }
 // }
