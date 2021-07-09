@@ -212,7 +212,7 @@ class BluetoothDeviceClient extends BinaryHelper {
                     server.disconnect();
                     return;
                 }
-                this.onConnectFailure(server.device, err);
+                this.onConnectFailure(this.device, err);
             });
         return true;
     }

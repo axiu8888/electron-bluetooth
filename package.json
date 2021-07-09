@@ -6,8 +6,8 @@
   "scripts": {
     "install": "electron-rebuild",
     "start": "electron .",
-    "electron-bluetooth_x86": "electron-packager . serialport-example --win32 --arch=ia32 --out ./install/ --overwrite --app-version=2.0.0 --electron-version=13.1.4 --icon=./logo.ico --asar",
-    "electron-bluetooth_x64": "electron-packager . serialport-example --win32 --arch=x64 --out ./install/ --overwrite --app-version=2.0.0 --electron-version=13.1.4 --icon=./logo.ico --asar",
+    "electron-bluetooth_x86": "electron-packager . electron-bluetooth --win32 --arch=ia32 --out ./install/ --overwrite --app-version=2.0.0 --electron-version=13.1.4 --icon=./logo.ico --asar",
+    "electron-bluetooth_x64": "electron-packager . electron-bluetooth --win32 --arch=x64 --out ./install/ --overwrite --app-version=2.0.0 --electron-version=13.1.4 --icon=./logo.ico --asar",
     "electron-bluetooth": "npm run electron-bluetooth_x86 && npm run electron-bluetooth_x64",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -28,6 +28,13 @@
   "homepage": "https://github.com/axiuya/electron-bluetooth#readme",
   "devDependencies": {
     "electron": "^13.1.4",
-    "electron-packager": "^15.2.0"
+    "electron-packager": "^15.2.0",
+    "electron-rebuild": "^2.3.5",
+    "node-abi": "^2.30.0"
+  },
+  "dependencies": {
+    "drivelist": "^9.2.4",
+    "serialport": "^9.2.0",
+    "usb": "^1.7.1"
   }
 }

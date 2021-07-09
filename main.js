@@ -6,6 +6,7 @@ const BrowserWindow = electron.BrowserWindow
 
 const path = require('path')
 const url = require('url')
+// const SerialPort = require('serialport');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -18,6 +19,10 @@ function createWindow() {
         height: 600,
         webPreferences: {
             nodeIntegration: true,
+            nodeIntegrationInWorker: true,
+            nodeIntegrationInSubFrames: true,
+            enableRemoteModule: true,
+            contextIsolation: false, // 必须
             preload: path.join(__dirname, 'preload.js')
         }
     })
@@ -40,6 +45,8 @@ function createWindow() {
         mainWindow = null
     })
 }
+
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
 app.allowRendererProcessReuse = false
 

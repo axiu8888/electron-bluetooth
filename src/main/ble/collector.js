@@ -27,8 +27,8 @@ addClickListener('connect', () => {
         } else {
             console.log(device);
 
-            // if (device.name == 'HSRG_11000184') {
-            if (device.name == 'HSRG_11000092') {
+            if (device.name == 'HSRG_11000184') {
+            // if (device.name == 'HSRG_11000092') {
                 client = new CollectorBluetoothDeviceClient(device);
                 // 连接设备
                 setTimeout(() => client.connect(), 1000);
