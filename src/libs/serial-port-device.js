@@ -130,14 +130,14 @@ class SerialPortDetector {
      */
     filter(port) {
         return true;
-    };
+    }
 
     /**
      * 获取key
      */
     computeKey(port) {
         return typeof port == 'string' ? port : port.locationId;
-    };
+    }
 
     /**
      * 获取串口设备数量
@@ -146,7 +146,7 @@ class SerialPortDetector {
      */
     size() {
         return this._devices.size;
-    };
+    }
 
     /**
      * 判断串口设备是否存在
@@ -156,7 +156,7 @@ class SerialPortDetector {
      */
     has(port) {
         return this._devices.has(this.computeKey(port));
-    };
+    }
 
     /**
      * 获取串口设备
@@ -166,7 +166,7 @@ class SerialPortDetector {
      */
     get(key) {
         return this._devices.get(this.computeKey(key));
-    };
+    }
 
     /**
      * 保存串口设备
@@ -176,7 +176,7 @@ class SerialPortDetector {
     put(port) {
         this._devices.set(this.computeKey(port), port);
         return port;
-    };
+    }
 
     /**
      * 移除串口设备
@@ -186,14 +186,14 @@ class SerialPortDetector {
     remove(port) {
         this._devices.delete(this.computeKey(port));
         return port;
-    };
+    }
 
     /**
      * 清空串口设备
      */
     clear() {
         this._devices.clear();
-    };
+    }
 
     /**
      * 迭代串口设备
@@ -204,7 +204,7 @@ class SerialPortDetector {
         if (callback && this._devices.size) {
             this._devices.forEach(callback);
         }
-    };
+    }
 
     /**
      * 探测
@@ -231,7 +231,7 @@ class SerialPortDetector {
                 });
             })
             .catch((err) => console.error(err));
-    };
+    }
 
     /**
      * 加载串口设备
@@ -247,7 +247,7 @@ class SerialPortDetector {
         } finally {
             this.setState(port, 2);
         }
-    };
+    }
 
     /**
      * 移除串口设备
@@ -260,7 +260,7 @@ class SerialPortDetector {
         } catch (err) {
             console.error(err);
         }
-    };
+    }
 
     /**
      * 开始探测
@@ -275,7 +275,7 @@ class SerialPortDetector {
                 this.clear();
             }
         }
-    };
+    }
 
     /**
      * 停止探测
@@ -286,7 +286,7 @@ class SerialPortDetector {
             this.clear();
             this.intervalTimer = null;
         }
-    };
+    }
 
     /**
      * 设置串口的状态
@@ -298,7 +298,7 @@ class SerialPortDetector {
     setState(port, index) {
         port.state = STATE[index % STATE.length];
         return port;
-    };
+    }
 
     /**
      * 判断串口的状态
@@ -309,7 +309,7 @@ class SerialPortDetector {
      */
     isState(port, index) {
         return port.state == STATE[index];
-    };
+    }
 
     /**
      * 是否为失去关联的设备
@@ -318,7 +318,7 @@ class SerialPortDetector {
      */
     isDetach(port) {
         return this.isState(port, 1);
-    };
+    }
 
     /**
      * 是否为新关联的设备
@@ -327,7 +327,7 @@ class SerialPortDetector {
      */
     isAttach(port) {
         return this.isState(port, 1);
-    };
+    }
 
     /**
      * 是否为已存在的设备
@@ -336,7 +336,7 @@ class SerialPortDetector {
      */
     isExist(port) {
         return this.isState(port, 2);
-    };
+    }
 
     /**
      * 监听设备上线
@@ -345,7 +345,7 @@ class SerialPortDetector {
      */
     onAttach(port) {
         console.log("设备上线" + JSON.stringify(port));
-    };
+    }
 
     /**
      * 监听设备离线
@@ -354,6 +354,6 @@ class SerialPortDetector {
      */
     onDetach(port) {
         console.log("设备离线" + JSON.stringify(port));
-    };
+    }
 
 }
