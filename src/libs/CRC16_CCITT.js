@@ -1,50 +1,5 @@
-// "Class" for calculating CRC8 checksums...
-function CRC8(polynomial, initial_value) { // constructor takes an optional polynomial type from CRC8.POLY
-  if (polynomial == null) polynomial = CRC8.POLY.CRC8_CCITT
-  this.table = CRC8.generateTable(polynomial);
-  this.initial_value = initial_value;
-}
 
-// Returns the 8-bit checksum given an array of byte-sized numbers
-CRC8.prototype.checksum = function (byte_array) {
-  var c = this.initial_value;
-
-  for (var i = 0; i < byte_array.length; i++)
-    c = this.table[(c ^ byte_array[i]) % 256]
-
-  return c;
-}
-
-// returns a lookup table byte array given one of the values from CRC8.POLY 
-CRC8.generateTable = function (polynomial) {
-  var csTable = [] // 256 max len byte array
-
-  for (var i = 0; i < 256; ++i) {
-    var curr = i
-    for (var j = 0; j < 8; ++j) {
-      if ((curr & 0x80) !== 0) {
-        curr = ((curr << 1) ^ polynomial) % 256
-      } else {
-        curr = (curr << 1) % 256
-      }
-    }
-    csTable[i] = curr
-  }
-
-  return csTable
-}
-
-// This "enum" can be used to indicate what kind of CRC8 checksum you will be calculating
-CRC8.POLY = {
-  CRC8: 0xd5,
-  CRC8_CCITT: 0x07,
-  CRC8_DALLAS_MAXIM: 0x31,
-  CRC8_SAE_J1850: 0x1D,
-  CRC_8_WCDMA: 0x9b,
-}
-
-
-CRC8.CRC8_TABLE = [
+const CRC16_CCITT_TABLE = [
   0x00, 0x5e, 0xbc, 0xe2, 0x61, 0x3f, 0xdd, 0x83, 0xc2, 0x9c, 0x7e, 0x20, 0xa3, 0xfd, 0x1f, 0x41,
   0x9d, 0xc3, 0x21, 0x7f, 0xfc, 0xa2, 0x40, 0x1e, 0x5f, 0x01, 0xe3, 0xbd, 0x3e, 0x60, 0x82, 0xdc,
   0x23, 0x7d, 0x9f, 0xc1, 0x42, 0x1c, 0xfe, 0xa0, 0xe1, 0xbf, 0x5d, 0x03, 0x80, 0xde, 0x3c, 0x62,
@@ -61,4 +16,12 @@ CRC8.CRC8_TABLE = [
   0x57, 0x09, 0xeb, 0xb5, 0x36, 0x68, 0x8a, 0xd4, 0x95, 0xcb, 0x29, 0x77, 0xf4, 0xaa, 0x48, 0x16,
   0xe9, 0xb7, 0x55, 0x0b, 0x88, 0xd6, 0x34, 0x6a, 0x2b, 0x75, 0x97, 0xc9, 0x4a, 0x14, 0xf6, 0xa8,
   0x74, 0x2a, 0xc8, 0x96, 0x15, 0x4b, 0xa9, 0xf7, 0xb6, 0xe8, 0x0a, 0x54, 0xd7, 0x89, 0x6b, 0x35
-]
+];
+
+function CRC16_ccitt(bytes) {
+  let value = 0x0000;
+  for (let b of bytes) {
+    value = (CRC16_CCITT_TABLE[(value ^ b) & 0xFF] ^ (value >> 8));
+  }
+  return value;
+}

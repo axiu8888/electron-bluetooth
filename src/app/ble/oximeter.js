@@ -72,8 +72,6 @@ class OximeterBluetoothDeviceClient extends BluetoothDeviceClient {
 
     constructor(device) {
         super(device);
-        this.crc8 = new CRC8(CRC8.POLY.CRC8_CCITT);
-        this.crc8.table = CRC8.CRC8_TABLE;
     }
 
     // 设备连接成功
@@ -194,6 +192,9 @@ class OximeterBluetoothDeviceClient extends BluetoothDeviceClient {
             }
 
 
+        } else if(data[0] == 0x02) {
+            // 波形
+
         }
     }
 
@@ -203,19 +204,23 @@ class OximeterBluetoothDeviceClient extends BluetoothDeviceClient {
         cmd[0] = 0xAA;
         cmd[1] = 0x55;
         cmd[2] = 0x0F;
-        cmd[3] = 1 + data.length + 1;
+        cmd[3] = data.length + 1;
         for (let i = 0; i < data.length; i++) {
             cmd[i + 4] = data[i];
         }
         // 计算校验和
-        cmd[cmd.length - 1] = this.crc8.checksum(cmd.slice(0, cmd.length - 1));
+        cmd[cmd.length - 1] = CRC16_ccitt(cmd.slice(0, cmd.length - 1));
+        return cmd;
+    }
+
+    sendCmd(payload) {
+        let cmd = this.cmd(payload);
+        this.write(serviceUUID, writeCharacteristicUUID, cmd);
         return cmd;
     }
 
     sendGetVersionCmd() {
-        let cmd = this.cmd([0x83]);
-        this.write(serviceUUID, writeCharacteristicUUID, cmd);
-        return cmd;
+        return this.sendCmd([0x83]);
     }
 
     /**
@@ -224,9 +229,7 @@ class OximeterBluetoothDeviceClient extends BluetoothDeviceClient {
      * @returns 发送的指令
      */
     sendSpo2Enable() {
-        let cmd = new Uint8Array([0xAA, 0x55, 0x0F, 0x03, 0x84, 0x01, 0xE0]);
-        this.write(serviceUUID, writeCharacteristicUUID, cmd);
-        return cmd;
+        return this.sendCmd([0x84, 0x01]);
     }
 
     /**
@@ -235,9 +238,7 @@ class OximeterBluetoothDeviceClient extends BluetoothDeviceClient {
      * @returns 发送的指令
      */
     sendWaveEnable() {
-        let cmd = new Uint8Array([0xAA, 0x55, 0x0F, 0x03, 0x85, 0x01, 0x24]);
-        this.write(serviceUUID, writeCharacteristicUUID, cmd);
-        return cmd;
+        return this.sendCmd([0x85, 0x01]);
     }
 
 }
